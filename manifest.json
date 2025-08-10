@@ -2,7 +2,7 @@
     "name": "Juego de Gatitos PWA",
     "short_name": "Gatitos",
     "description": "Un divertido juego de hacer clic en gatitos, ahora como una PWA instalable.",
-    "start_url": ".",
+    "start_url": "https://wilmervn83.github.io/Gatitos/",
     "display": "standalone",
     "background_color": "#f7f4ff",
     "theme_color": "#ff7ab6",
