@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Juego de Gatitos Responsive</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff7ab6">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    /* --- CSS COMPLETAMENTE REESCRITO PARA SER RESPONSIVE --- */
+    :root{
+      --bg:#f0f2f5;
+      --panel:#ffffff;
+      --accent:#ff7ab6;
+      --accent2:#7ac7ff;
+      --muted:#7b6f8a;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      height: 100%;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background-color: var(--bg);
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- CONTENEDOR PRINCIPAL --- */
+    .container {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1; /* Ocupa todo el alto disponible */
+      padding: 12px;
+      gap: 12px;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      overflow: hidden; /* Previene scroll no deseado */
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0; /* No se encoge */
+    }
+    h1 {
+      font-size: 20px;
+    }
+    .panel {
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 4px 12px rgba(50, 30, 100, 0.05);
+    }
+    
+    /* --- LAYOUT DEL JUEGO (MÓVIL POR DEFECTO) --- */
+    .game-layout {
+      display: flex;
+      flex-direction: column; /* Apilado en móviles */
+      gap: 12px;
+      flex-grow: 1;
+      min-height: 0; /* Bug fix para flexbox */
+    }
+    .left-column {
+      display: flex;
+      flex-wrap: wrap; /* Permite que los paneles se reorganicen si no caben */
+      gap: 12px;
+    }
+    .left-column > .panel {
+      flex: 1 1 200px; /* Paneles crecen y se encogen */
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* 2 columnas para estadísticas */
+      gap: 8px;
+    }
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      border-radius: 8px;
+      background: #f7f9fc;
+      font-weight: 600;
+    }
+
+    .board-container {
+      flex-grow: 1; /* ¡CLAVE! Hace que el tablero ocupe el espacio */
+      min-height: 300px; /* Altura mínima para jugar */
+    }
+    .board {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #87CEEB 0%, #E0F8FF 50%, #FAEBD7 100%);
+    }
+    #playfield {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .kitten {
+      position: absolute;
+      font-size: 48px; /* Tamaño ideal para tocar con el dedo */
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+      transform: translate(-50%, -50%);
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+    }
+    button {
+      flex-grow: 1; /* Botones ocupan el espacio */
+      cursor: pointer;
+      border: 0;
+      padding: 12px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, var(--accent), #ff5fa1);
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    button.alt { background: linear-gradient(180deg, var(--accent2), #3baeff); }
+    button.ghost { background: transparent; color: var(--muted); border: 1px solid #eee; }
+
+    .center-note {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      width: 90%;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 16px;
+      border-radius: 12px;
+    }
+    .small {font-size: 13px; color: var(--muted);}
+
+    /* --- MEDIA QUERY PARA PANTALLAS GRANDES (TABLET/DESKTOP) --- */
+    @media (min-width: 768px) {
+      .container {
+        padding: 24px;
+      }
+      .game-layout {
+        flex-direction: row; /* Dos columnas en desktop */
+      }
+      .left-column {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        width: 300px;
+        flex-shrink: 0;
+      }
+      .stats {
+        display: flex;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="container">
+    <header>
+      <h1>🐾 Juego de Gatitos</h1>
+      <div style="flex:1"></div>
+    </header>
+
+    <div class="game-layout">
+      
+      <aside class="left-column">
+        <div class="stats panel">
+          <div class="stat"><span>Puntuación</span><span id="score">0</span></div>
+          <div class="stat"><span>Mejor</span><span id="best">0</span></div>
+          <div class="stat"><span>Tiempo</span><span id="time">60</span></div>
+          <div class="stat"><span>Nivel</span><span id="level">1</span></div>
+          <div class="stat"><span>Vidas</span><span id="lives">5</span></div>
+        </div>
+  
+        <div class="panel">
+          <div class="controls">
+            <button id="start">Iniciar</button>
+            <button id="pause" class="ghost">Pausa</button>
+            <button id="mute" class="alt">🔊</button>
+          </div>
+        </div>
+      </aside>
+  
+      <main class="board-container panel">
+        <div class="board">
+            <div id="playfield"></div>
+            <div class="center-note" id="message">
+              <div style="font-size:28px;font-weight:800">🐱 ¡Bienvenido!</div>
+              <div class="small">Pulsa Iniciar para jugar.</div>
+            </div>
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <script>
+    // Se ha añadido resize() al inicio del juego para asegurar las dimensiones correctas
+    const playfield = document.getElementById('playfield');
+    const scoreEl = document.getElementById('score');
+    const bestEl = document.getElementById('best');
+    const timeEl = document.getElementById('time');
+    const levelEl = document.getElementById('level');
+    const livesEl = document.getElementById('lives');
+    const message = document.getElementById('message');
+    const startBtn = document.getElementById('start');
+    const pauseBtn = document.getElementById('pause');
+    const muteBtn = document.getElementById('mute');
+    let width = 0, height = 0;
+    let kittens = [];
+    let score = 0;
+    let best = Number(localStorage.getItem('gatos_best') || 0);
+    bestEl.textContent = best;
+    let timeLeft = 60;
+    let level = 1;
+    let lives = 5;
+    let running = false;
+    let paused = false;
+    let spawnInterval = 1200;
+    let spawnTimer = null;
+    let gameLoopInterval = null;
+    let gameTimer = null;
+    let moveSpeed = 1;
+    let muted = false;
+    let shieldUntil = 0;
+    let slowMoUntil = 0;
+    let audioCtx;
+    function playSfx(type = 'click') {
+      if (muted) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        g.gain.value = 0.08;
+        switch (type) {
+          case 'powerup': o.type = 'triangle'; o.frequency.setValueAtTime(1000, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5); break;
+          case 'bad': o.type = 'square'; o.frequency.setValueAtTime(200, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3); break;
+          case 'miss': o.type = 'sawtooth'; o.frequency.setValueAtTime(300, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.2); g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2); break;
+          case 'levelUp': o.type = 'sine'; o.frequency.setValueAtTime(523, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime); setTimeout(() => { o.frequency.setValueAtTime(659, audioCtx.currentTime); }, 80); setTimeout(() => { o.frequency.setValueAtTime(783, audioCtx.currentTime); }, 160); g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4); break;
+          case 'gameOver': o.type = 'triangle'; o.frequency.setValueAtTime(440, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 1); g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 1); break;
+          case 'click': default: o.type = 'sine'; o.frequency.value = 800; g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.1); break;
+        }
+        o.start();
+        o.stop(audioCtx.currentTime + 1);
+      } catch (e) { console.warn('Audio not available', e); }
+    }
+    function resize(){ const r = playfield.getBoundingClientRect(); width = r.width; height = r.height; }
+    window.addEventListener('resize', resize);
+    function rand(min,max){return Math.random()*(max-min)+min}
+    function spawnKitten(type){
+      const el = document.createElement('div'); el.className='kitten'; el.dataset.type = type; let emoji='🐱'; let value=10;
+      switch(type){ case 'golden': emoji='😻'; value=30; break; case 'fast': emoji='🐯'; value=15; break; case 'shield': emoji='🛡️'; value=0; break; case 'nasty': emoji='👻'; value=-1; break; case 'time': emoji='⏰'; value=5; break; case 'life': emoji='💖'; value=0; break; case 'slowmo': emoji='🐢'; value=5; break; }
+      el.innerText = emoji; if(width <= 0 || height <= 0) resize(); const x = rand(40, Math.max(50, width-40)); const y = rand(40, Math.max(50, height-40)); el.style.left = x+'px'; el.style.top = y+'px'; el.style.fontSize = (38 + Math.random()*20) + 'px'; playfield.appendChild(el);
+      const kitty = { el, x, y, vx: rand(-1,1)*moveSpeed*(type==='fast'?2:1), vy: rand(-1,1)*moveSpeed*(type==='fast'?2:1), type, value }; kittens.push(kitty);
+      el.addEventListener('click', (ev)=>{ ev.stopPropagation(); handleClickKitten(kitty); });
+      const lifeTime = Math.floor(rand(1800,4000)); setTimeout(()=>{ if(!playfield.contains(el)) return; removeKitten(kitty, false); }, lifeTime); spawnSparkle(x,y);
+    }
+    function removeKitten(kitty, clicked){
+      if(!kitty) return; try{ kitty.el.remove(); }catch(e){} const idx = kittens.indexOf(kitty); if(idx>=0) kittens.splice(idx,1);
+      if(!clicked){ if(kitty.type==='nasty' || kitty.type==='time' || kitty.type==='life' || kitty.type==='slowmo') return; if(Date.now() < shieldUntil) return; lives = Math.max(0,lives-1); livesEl.textContent = lives; if(running) playSfx('miss'); if(lives<=0) endGame(); }
+    }
+    function handleClickKitten(kitty){
+      if(!kitty) return; let soundType = 'click';
+      if(kitty.type==='golden'){ score += kitty.value * 3; showFloating('+'+(kitty.value*3), kitty.x, kitty.y); soundType = 'powerup';
+      } else if(kitty.type==='shield'){ shieldUntil = Date.now() + 5000; showFloating('🛡️ Escudo', kitty.x, kitty.y); soundType = 'powerup';
+      } else if(kitty.type==='fast'){ score += kitty.value; spawnInterval = Math.max(300, spawnInterval - 80); restartSpawnLoop(); showFloating('+'+kitty.value, kitty.x, kitty.y); soundType = 'powerup';
+      } else if(kitty.type==='nasty'){ score = Math.max(0, score - 15); showFloating('-15', kitty.x, kitty.y); soundType = 'bad';
+      } else if(kitty.type === 'time') { timeLeft += kitty.value; timeEl.textContent = timeLeft; showFloating(`+${kitty.value}s`, kitty.x, kitty.y); soundType = 'powerup';
+      } else if(kitty.type === 'life') { lives++; livesEl.textContent = lives; showFloating('+1 Vida', kitty.x, kitty.y); soundType = 'powerup';
+      } else if(kitty.type === 'slowmo') { slowMoUntil = Date.now() + 5000; showFloating('🐢 Lento', kitty.x, kitty.y); soundType = 'powerup';
+      } else { score += kitty.value; showFloating('+'+kitty.value, kitty.x, kitty.y); }
+      playSfx(soundType); scoreEl.textContent = score; removeKitten(kitty, true); if(score >= level*100){ level++; levelUp(); }
+    }
+    function showFloating(text,x,y){ const f = document.createElement('div'); f.style.position='absolute'; f.style.left=x+'px'; f.style.top=y+'px'; f.style.transform='translate(-50%,-50%)'; f.style.fontWeight=800; f.style.pointerEvents='none'; f.style.fontSize='18px'; f.textContent=text; playfield.appendChild(f); let t=0; const id = setInterval(()=>{ t+=16; f.style.top = (y - (t/12)) + 'px'; f.style.opacity = 1 - t/600; if(t>600){ clearInterval(id); f.remove(); } },16); }
+    function spawnSparkle(x,y){ for(let i=0;i<6;i++){ const s = document.createElement('div'); s.style.position='absolute'; s.style.width='8px'; s.style.height='8px'; s.style.borderRadius='50%'; s.style.left=x+'px'; s.style.top=y+'px'; s.style.background=['#ffd6e8','#fff2b2','#cfefff'][Math.floor(Math.random()*3)]; playfield.appendChild(s); const ang = Math.random()*Math.PI*2; const dist = 20+Math.random()*60; const dx = Math.cos(ang)*dist; const dy = Math.sin(ang)*dist; s.animate([{transform:'translate(-50%,-50%)'},{transform:`translate(${dx}px,${dy}px)`,opacity:0}],{duration:700+Math.random()*300,easing:'ease-out'}).onfinish = ()=> s.remove(); } }
+    function gameStep(){ const speedMultiplier = (Date.now() < slowMoUntil) ? 0.4 : 1.5; for(const k of kittens){ k.x += k.vx * speedMultiplier; k.y += k.vy * speedMultiplier; if(k.x < 10 || k.x > width-10) k.vx *= -1; if(k.y < 10 || k.y > height-10) k.vy *= -1; k.el.style.left = Math.max(8,Math.min(width-8,k.x)) + 'px'; k.el.style.top = Math.max(8,Math.min(height-8,k.y)) + 'px'; } }
+    function levelUp(){ levelEl.textContent = level; moveSpeed += 0.25; spawnInterval = Math.max(350, spawnInterval - 80); playSfx('levelUp'); restartSpawnLoop(); message.innerHTML = `<div style="font-size:28px;font-weight:900">Nivel ${level}</div>`; message.style.display = 'block'; setTimeout(()=>{ message.style.display = 'none'; },1200); }
+    function scheduleSpawn(){ spawnTimer = setTimeout(()=>{ if(!running || paused) return; const r = Math.random(); if(r < 0.05) spawnKitten('golden'); else if(r < 0.10) spawnKitten('fast'); else if(r < 0.14) spawnKitten('shield'); else if(r < 0.19) spawnKitten('nasty'); else if(r < 0.23) spawnKitten('time'); else if(r < 0.27) spawnKitten('life'); else if(r < 0.31) spawnKitten('slowmo'); else spawnKitten('normal'); if(running && !paused) scheduleSpawn(); }, spawnInterval); }
+    function restartSpawnLoop(){ if(spawnTimer) clearTimeout(spawnTimer); if(running && !paused) scheduleSpawn(); }
+    function startGame(){ 
+      if(running) return; 
+      resize(); // ¡CLAVE! Asegura que el tamaño es correcto al iniciar
+      running = true; paused=false; score = 0; scoreEl.textContent = score; timeLeft = 60; timeEl.textContent = timeLeft; level = 1; levelEl.textContent = level; lives = 5; livesEl.textContent = lives; spawnInterval = 1200; moveSpeed = 1; shieldUntil = 0; slowMoUntil = 0; 
+      message.style.display = 'none';
+      for(const k of [...kittens]) removeKitten(k,true); restartSpawnLoop(); 
+      if(gameLoopInterval) clearInterval(gameLoopInterval); gameLoopInterval = setInterval(()=>{ if(!paused) gameStep(); }, 16); 
+      if(gameTimer) clearInterval(gameTimer); gameTimer = setInterval(()=>{ if(!running) { clearInterval(gameTimer); return; } if(paused) return; timeLeft--; timeEl.textContent = timeLeft; if(timeLeft <= 0){ clearInterval(gameTimer); endGame(); } },1000); 
+    }
+    function endGame(){ 
+      running=false; paused=false; if (lives > 0) playSfx('gameOver'); 
+      if(spawnTimer) clearTimeout(spawnTimer); spawnTimer = null; if(gameLoopInterval) clearInterval(gameLoopInterval); gameLoopInterval = null; if(gameTimer) clearInterval(gameTimer); gameTimer = null; 
+      for(const k of [...kittens]) removeKitten(k,true); 
+      if(score > best){ best = score; localStorage.setItem('gatos_best', String(best)); bestEl.textContent = best; } 
+      message.innerHTML = `<div style="font-size:28px;font-weight:900">Fin del juego</div><div class="small">Puntuación: <strong>${score}</strong></div><div style="margin-top:8px"><button id="replay">Jugar otra vez</button></div>`;
+      message.style.display = 'block';
+      document.getElementById('replay')?.addEventListener('click', startGame);
+    }
+    pauseBtn.addEventListener('click', ()=>{ if(!running) return; paused = !paused; pauseBtn.textContent = paused? 'Reanudar' : 'Pausa'; if(paused){ if(spawnTimer) clearTimeout(spawnTimer); } else { restartSpawnLoop(); } });
+    muteBtn.addEventListener('click', ()=>{ muted = !muted; muteBtn.textContent = muted? '🔇' : '🔊'; if(!muted && !audioCtx){ playSfx('click');} });
+    startBtn.addEventListener('click', startGame);
+    playfield.addEventListener('click', (ev)=>{ if(!running || paused) return; if(ev.target !== playfield) return; if(Date.now() < shieldUntil) return; lives = Math.max(0,lives-1); livesEl.textContent = lives; playSfx('miss'); if(lives<=0) endGame(); });
+    setInterval(()=>{ if(!running || paused) return; if(kittens.length < Math.min(8, 3 + level)){ if(Math.random() < 0.35) spawnKitten('normal'); } }, 800);
+    window.addEventListener('beforeunload', ()=>{ localStorage.setItem('gatos_best', String(best)); });
+    message.addEventListener('click', (ev)=>{ if(ev.target.id === 'replay') return; if(!running) startGame(); });
+    
+    // Llamada inicial para establecer las dimensiones
+    resize();
+  </script>
+
+  <!-- PWA Registration Script -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          console.log('Service worker registered.', reg);
+        }).catch(err => {
+          console.error('Service worker registration failed:', err);
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>

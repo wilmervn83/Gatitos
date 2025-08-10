@@ -1,0 +1,22 @@
+{
+    "name": "Juego de Gatitos PWA",
+    "short_name": "Gatitos",
+    "description": "Un divertido juego de hacer clic en gatitos, ahora como una PWA instalable.",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#f7f4ff",
+    "theme_color": "#ff7ab6",
+    "orientation": "portrait-primary",
+    "icons": [
+      {
+        "src": "icon-192.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      },
+      {
+        "src": "icon-512.png",
+        "type": "image/png",
+        "sizes": "512x512"
+      }
+    ]
+  }
